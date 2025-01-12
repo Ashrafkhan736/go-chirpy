@@ -30,9 +30,16 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func (cfg *apiConfig) getMetrics(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(200)
+	headers := w.Header()
+	headers.Set("content-type", "text/plain; charset=utf-8")
 	w.Write([]byte("Hits: " + strconv.Itoa(int(cfg.fileServerHits.Load()))))
 }
 
-func (cfg *apiConfig) resetMetrics(_ http.ResponseWriter, _ *http.Request) {
-	cfg.fileServerHits.CompareAndSwap(cfg.fileServerHits.Load(), 0)
+func (cfg *apiConfig) resetMetrics(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(200)
+	headers := w.Header()
+	headers.Set("content-type", "text/plain; charset=utf-8")
+	cfg.fileServerHits.Store(0)
+	w.Write([]byte("Hit reset to 0"))
 }
