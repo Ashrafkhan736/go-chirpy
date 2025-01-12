@@ -8,9 +8,12 @@ import (
 func main() {
 	const port = ":8080"
 	const dir = "."
+	apiMertic := apiConfig{}
 	mux := http.NewServeMux()
-	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir(dir))))
+	mux.Handle("/app/", apiMertic.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(dir)))))
 	mux.HandleFunc("/healthz", healthCheck)
+	mux.HandleFunc("/metrics", apiMertic.getMetrics)
+	mux.HandleFunc("/reset", apiMertic.resetMetrics)
 
 	srv := &http.Server{
 		Addr:    port,
@@ -19,15 +22,4 @@ func main() {
 
 	log.Printf("Server started on port %s", port)
 	log.Fatal(srv.ListenAndServe())
-}
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
-	headers := w.Header()
-	headers.Set("content-type", "text/plain; charset=utf-8")
-	i, err := w.Write([]byte("OK"))
-	if err != nil {
-		log.Println("Error writing response", err)
-	}
-	log.Println("Bytes written", i)
 }
